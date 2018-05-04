@@ -53,7 +53,7 @@ public class ToDoListApiControllerTest {
                 .exchange(requestEntity, new ParameterizedTypeReference<Collection<ToDoList>>() {
                 });
 
-        assertEquals(responseEntity.getStatusCode(), HttpStatus.OK);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Collection<ToDoList> body = responseEntity.getBody();
         assertEquals(1, body.size());
         assertEquals(doList, body.iterator().next());
@@ -71,7 +71,7 @@ public class ToDoListApiControllerTest {
                 .exchange(requestEntity, new ParameterizedTypeReference<Collection<ToDoEntry>>() {
                 });
 
-        assertEquals(responseEntity.getStatusCode(), HttpStatus.OK);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Collection<ToDoEntry> body = responseEntity.getBody();
         assertEquals(1, body.size());
         assertEquals(entry, body.iterator().next());
@@ -83,7 +83,7 @@ public class ToDoListApiControllerTest {
 
         ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
 
-        assertEquals(responseEntity.getStatusCode(), HttpStatus.NOT_FOUND);
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
     @Test
@@ -94,7 +94,7 @@ public class ToDoListApiControllerTest {
         ResponseEntity<ToDoList> responseEntity = restTemplate
                 .exchange(requestEntity, new ParameterizedTypeReference<ToDoList>() {
                 });
-        assertEquals(responseEntity.getStatusCode(), HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 
         List<ToDoList> lists = listRepository.findAll();
 
@@ -110,7 +110,7 @@ public class ToDoListApiControllerTest {
         ResponseEntity<ToDoList> responseEntity = restTemplate
                 .exchange(requestEntity, new ParameterizedTypeReference<ToDoList>() {
                 });
-        assertEquals(responseEntity.getStatusCode(), HttpStatus.BAD_REQUEST);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 
         List<ToDoList> lists = listRepository.findAll();
         assertEquals(0, lists.size());
@@ -122,6 +122,59 @@ public class ToDoListApiControllerTest {
             builder.append(i);
         }
         return builder.toString();
+    }
+
+
+    @Test
+    public void createTodoEntryShouldReturn201StatusCode() throws Exception {
+        ToDoList doList = listRepository.save(new ToDoList("list"));
+        ToDoEntry entry = new ToDoEntry("descr");
+
+        RequestEntity<ToDoEntry> requestEntity = new RequestEntity<>(entry, HttpMethod.POST, new URI("/api/" + doList.getId()));
+        ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
+
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+
+        ToDoList actualList = listRepository.findOne(doList.getId());
+        assertEquals(1, entryRepository.count());
+        assertEquals(1, actualList.getEntries().size());
+        assertEquals(entry.getDescription(), actualList.getEntries().iterator().next().getDescription());
+    }
+
+    @Test
+    public void createTodoEntryWithNotValidDescriptionShouldReturn400StatusCode() throws Exception {
+        ToDoList doList = listRepository.save(new ToDoList("list"));
+        ToDoEntry entry = new ToDoEntry(getNotValidDescription());
+
+        RequestEntity<ToDoEntry> requestEntity = new RequestEntity<>(entry, HttpMethod.POST, new URI("/api/" + doList.getId()));
+        ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        ToDoList actualList = listRepository.findOne(doList.getId());
+        assertEquals(0, actualList.getEntries().size());
+        assertEquals(0, entryRepository.count());
+    }
+
+    private String getNotValidDescription() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 16000; i++) {
+            builder.append(i);
+        }
+        return builder.toString();
+
+    }
+
+    @Test
+    public void createTodoEntryByNonexistentListIdShouldReturn404StatusCode() throws Exception {
+        ToDoEntry entry = new ToDoEntry("descr");
+
+        RequestEntity<ToDoEntry> requestEntity = new RequestEntity<>(entry, HttpMethod.POST, new URI("/api/100"));
+        ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(0, listRepository.count());
+        assertEquals(0, entryRepository.count());
     }
 
 }

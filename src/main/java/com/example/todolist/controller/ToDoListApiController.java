@@ -49,9 +49,6 @@ public class ToDoListApiController {
         return entries;
     }
 
-    /**
-     * Returns 201 and new entity if operation successful or 400 if invalid data supplied.
-     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ToDoList createList(@RequestBody @Valid ToDoList list) {

@@ -29,6 +29,7 @@ public class ToDoEntry {
     private ToDoList list;
 
     @NotNull
+    @Size(max = 16000)
     private String description;
 
     public ToDoEntry(String description) {
