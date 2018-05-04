@@ -4,6 +4,8 @@ import com.example.todolist.model.ToDoEntry;
 import com.example.todolist.model.ToDoList;
 import com.example.todolist.repository.EntryRepository;
 import com.example.todolist.repository.ListRepository;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,6 +35,12 @@ public class ToDoListApiControllerTest {
     private ListRepository listRepository;
     @Autowired
     private EntryRepository entryRepository;
+
+    @Before
+    @After
+    public void cleanUp() throws Exception {
+        listRepository.deleteAll();
+    }
 
     @Test
     public void getListsShouldReturnListsWithStatus200() throws Exception {
@@ -76,4 +85,43 @@ public class ToDoListApiControllerTest {
 
         assertEquals(responseEntity.getStatusCode(), HttpStatus.NOT_FOUND);
     }
+
+    @Test
+    public void createListShouldSaveItToRepository() throws Exception {
+        ToDoList doList = new ToDoList("list");
+
+        RequestEntity<ToDoList> requestEntity = new RequestEntity<>(doList, HttpMethod.POST, new URI("/api/"));
+        ResponseEntity<ToDoList> responseEntity = restTemplate
+                .exchange(requestEntity, new ParameterizedTypeReference<ToDoList>() {
+                });
+        assertEquals(responseEntity.getStatusCode(), HttpStatus.CREATED);
+
+        List<ToDoList> lists = listRepository.findAll();
+
+        assertEquals(1, lists.size());
+        assertEquals(doList.getName(), lists.get(0).getName());
+    }
+
+    @Test
+    public void createNotValidListShouldReturn400StatusCode() throws Exception {
+        ToDoList doList = new ToDoList(getNotValidName());
+
+        RequestEntity<ToDoList> requestEntity = new RequestEntity<>(doList, HttpMethod.POST, new URI("/api/"));
+        ResponseEntity<ToDoList> responseEntity = restTemplate
+                .exchange(requestEntity, new ParameterizedTypeReference<ToDoList>() {
+                });
+        assertEquals(responseEntity.getStatusCode(), HttpStatus.BAD_REQUEST);
+
+        List<ToDoList> lists = listRepository.findAll();
+        assertEquals(0, lists.size());
+    }
+
+    private String getNotValidName() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 257; i++) {
+            builder.append(i);
+        }
+        return builder.toString();
+    }
+
 }
