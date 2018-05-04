@@ -5,13 +5,12 @@ import com.example.todolist.model.ToDoEntry;
 import com.example.todolist.model.ToDoList;
 import com.example.todolist.repository.EntryRepository;
 import com.example.todolist.repository.ListRepository;
-
-import java.util.Collection;
-import javax.validation.Valid;
-
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.Collection;
 
 @RestController
 @RequestMapping("api")
