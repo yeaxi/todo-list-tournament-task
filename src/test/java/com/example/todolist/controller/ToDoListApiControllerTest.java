@@ -50,5 +50,30 @@ public class ToDoListApiControllerTest {
         assertEquals(doList, body.iterator().next());
     }
 
+    @Test
+    public void getListEntriesShouldReturnEntriesByListId() throws Exception {
+        ToDoList doList = new ToDoList("list");
+        ToDoEntry entry = new ToDoEntry("descr");
+        doList.addEntry(entry);
+        doList = listRepository.save(doList);
 
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.GET, new URI("/api/" + doList.getId()));
+        ResponseEntity<Collection<ToDoEntry>> responseEntity = restTemplate
+                .exchange(requestEntity, new ParameterizedTypeReference<Collection<ToDoEntry>>() {
+                });
+
+        assertEquals(responseEntity.getStatusCode(), HttpStatus.OK);
+        Collection<ToDoEntry> body = responseEntity.getBody();
+        assertEquals(1, body.size());
+        assertEquals(entry, body.iterator().next());
+    }
+
+    @Test
+    public void getListEntriesByNonexistentIdShouldReturn404StatusCode() throws Exception {
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.GET, new URI("/api/2"));
+
+        ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
+
+        assertEquals(responseEntity.getStatusCode(), HttpStatus.NOT_FOUND);
+    }
 }

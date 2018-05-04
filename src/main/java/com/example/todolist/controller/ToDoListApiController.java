@@ -5,8 +5,10 @@ import com.example.todolist.model.ToDoEntry;
 import com.example.todolist.model.ToDoList;
 import com.example.todolist.repository.EntryRepository;
 import com.example.todolist.repository.ListRepository;
+
 import java.util.Collection;
 import javax.validation.Valid;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -28,25 +30,23 @@ public class ToDoListApiController {
     private final EntryRepository entryRepository;
 
     public ToDoListApiController(ListRepository listRepository,
-            EntryRepository entryRepository) {
+                                 EntryRepository entryRepository) {
         this.listRepository = listRepository;
         this.entryRepository = entryRepository;
     }
 
-    /**
-     * Returns available lists with code 200
-     */
     @GetMapping
     public Collection<ToDoList> getLists() {
         return listRepository.findAll();
     }
 
-    /**
-     * Lists all entries in the specified list, 404 if list not found
-     */
     @GetMapping("/{listId}")
     public Collection<ToDoEntry> getListEntries(@PathVariable Long listId) {
-        return entryRepository.findAllByListId(listId);
+        Collection<ToDoEntry> entries = entryRepository.findAllByListId(listId);
+        if (entries.isEmpty()) {
+            throw new NotFoundException();
+        }
+        return entries;
     }
 
     /**
