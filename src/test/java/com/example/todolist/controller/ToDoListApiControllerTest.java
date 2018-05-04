@@ -177,4 +177,25 @@ public class ToDoListApiControllerTest {
         assertEquals(0, entryRepository.count());
     }
 
+    @Test
+    public void deleteListByIdShouldReturnOK() throws Exception {
+        ToDoList doList = listRepository.save(new ToDoList("list"));
+
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/" + doList.getId()));
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        System.out.println(requestEntity.getBody());
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        assertEquals(0, listRepository.count());
+    }
+
+    @Test
+    public void deleteListByNonexistentIdShouldReturn404StatusCode() throws Exception {
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/100"));
+        ResponseEntity<Void> responseEntity = restTemplate.exchange(requestEntity, Void.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
 }

@@ -12,15 +12,7 @@ import javax.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api")
@@ -55,11 +47,6 @@ public class ToDoListApiController {
         return listRepository.save(list);
     }
 
-    /**
-     * Returns 201 and new entity if operation successful or 400 if invalid data supplied.
-     * Note that creating to do entries with description longer than 16k chars is
-     * not allowed!
-     */
     @PostMapping("/{listId}")
     @ResponseStatus(HttpStatus.CREATED)
     public void createEntry(@PathVariable Long listId, @RequestBody @Valid ToDoEntry entry) {
@@ -72,7 +59,7 @@ public class ToDoListApiController {
      * Returns 200 if successful, 404 if no such list id is found
      */
     @DeleteMapping("/{listid}")
-    public void deleteList(@PathVariable Long listId) {
+    public void deleteList(@PathVariable("listid") Long listId) {
         listRepository.delete(listId);
     }
 
