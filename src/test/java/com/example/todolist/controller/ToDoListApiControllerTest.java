@@ -40,6 +40,7 @@ public class ToDoListApiControllerTest {
     @After
     public void cleanUp() throws Exception {
         listRepository.deleteAll();
+        entryRepository.deleteAll();
     }
 
     @Test
@@ -184,7 +185,6 @@ public class ToDoListApiControllerTest {
         RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/" + doList.getId()));
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 
-        System.out.println(requestEntity.getBody());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         assertEquals(0, listRepository.count());
@@ -197,5 +197,64 @@ public class ToDoListApiControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void deleteEntryByIdShouldReturnOK() throws Exception {
+        ToDoList list = new ToDoList("list");
+        list = listRepository.save(list);
+        ToDoEntry entry = new ToDoEntry("desc");
+        entry.setList(list);
+        entry = entryRepository.save(entry);
+
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/" + entry.getId() + "/" + list.getId()));
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        assertEquals(1, listRepository.count());
+        assertEquals(0, entryRepository.count());
+    }
+
+    @Test
+    public void deleteEntryByNonexistentListIdShouldReturn404() throws Exception {
+        ToDoEntry entry = new ToDoEntry("desc");
+        entry = entryRepository.save(entry);
+
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/" + entry.getId() + "/100"));
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void deleteEntryByNonexistentEntryIdShouldReturn404() throws Exception {
+        ToDoList list = new ToDoList("list");
+        list = listRepository.save(list);
+
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/101/" + list.getId()));
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void deleteEntryByDifferentListIdShouldReturn400() throws Exception {
+        ToDoList list1 = new ToDoList("list1");
+        list1 = listRepository.save(list1);
+        ToDoList list2 = new ToDoList("list2");
+        list2 = listRepository.save(list2);
+        ToDoEntry entry = new ToDoEntry("desc");
+        entry.setList(list1);
+        entry = entryRepository.save(entry);
+
+        RequestEntity<Void> requestEntity = new RequestEntity<>(HttpMethod.DELETE, new URI("/api/" + entry.getId() + "/" + list2.getId()));
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        assertEquals(2, listRepository.count());
+        assertEquals(1, entryRepository.count());
+    }
+
 
 }

@@ -16,7 +16,7 @@ import java.util.*;
 public class ToDoList {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private Long id;
 
     @NotNull
@@ -79,5 +79,10 @@ public class ToDoList {
                 ", name='" + name + '\'' +
                 ", entries=" + entries +
                 '}';
+    }
+
+    public void removeEntry(ToDoEntry entry) {
+        entry.setList(null);
+        entries.remove(entry);
     }
 }

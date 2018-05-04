@@ -9,7 +9,6 @@ import com.example.todolist.repository.ListRepository;
 import java.util.Collection;
 import javax.validation.Valid;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -55,25 +54,19 @@ public class ToDoListApiController {
         entryRepository.save(entry);
     }
 
-    /**
-     * Returns 200 if successful, 404 if no such list id is found
-     */
     @DeleteMapping("/{listid}")
     public void deleteList(@PathVariable("listid") Long listId) {
         listRepository.delete(listId);
     }
 
-    /**
-     * Deletes given entry if list and entry is valid. Return 404 if ether list or entry id is incorrect.
-     * Return 400 if specified entry ID does not belong to the list.
-     */
     @DeleteMapping("/{entryId}/{listId}")
-    public void deleteEntry(@PathVariable Long listId, @PathVariable Long entryId) {
+    public void deleteEntry(@PathVariable("listId") Long listId, @PathVariable("entryId") Long entryId) {
         ToDoList list = ensureExists(listRepository.findOne(listId));
-        ToDoEntry entry = entryRepository.findOne(entryId);
+        ToDoEntry entry = ensureExists(entryRepository.findOne(entryId));
         if (entry.getList() != list) {
             throw new IllegalArgumentException();
         }
+        list.removeEntry(entry);
         entryRepository.delete(entry);
     }
 
@@ -81,6 +74,12 @@ public class ToDoListApiController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void notFound() {
         // No-op, return empty 404
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public void badRequest() {
+        // No-op, return empty 400
     }
 
     private static <T> T ensureExists(T object) {
